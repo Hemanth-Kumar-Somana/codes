@@ -115,3 +115,57 @@ int main(){
     printf("\n");
     return 0;
 }
+
+
+------------------------------------------------------------------------
+des
+#include <stdio.h>
+#include <string.h>
+
+void encrypt_data(const char *input, char *output, const char *key) {
+    size_t len = strlen(input);
+    size_t key_len = strlen(key);
+
+    for (size_t i = 0; i < len; i++) {
+        output[i] = input[i] ^ key[i % key_len];
+    }
+    output[len] = '\0';
+}
+
+void decrypt_data(const char *input, char *output, const char *key) {
+    size_t len = strlen(input);
+    size_t key_len = strlen(key);
+
+    for (size_t i = 0; i < len; i++) {
+        output[i] = input[i] ^ key[i % key_len];
+    }
+    output[len] = '\0';
+}
+
+int main() {
+    char plaintext[256], key[256];
+    char ciphertext[256], decryptedtext[256];
+
+    printf("Enter plaintext: ");
+    fgets(plaintext, sizeof(plaintext), stdin);
+    plaintext[strcspn(plaintext, "\n")] = 0;
+
+    printf("Enter key: ");
+    fgets(key, sizeof(key), stdin);
+    key[strcspn(key, "\n")] = 0;
+
+    encrypt_data(plaintext, ciphertext, key);
+
+    printf("\nPlaintext: %s\n", plaintext);
+    printf("Ciphertext (Hex): ");
+    for (size_t i = 0; i < strlen(ciphertext); i++) {
+        printf("%02X", (unsigned char)ciphertext[i]);
+    }
+    printf("\n");
+
+    decrypt_data(ciphertext, decryptedtext, key);
+    printf("Decrypted text: %s\n", decryptedtext);
+
+    return 0;
+}
+
