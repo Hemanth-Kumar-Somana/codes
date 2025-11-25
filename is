@@ -1,0 +1,411 @@
+#include <stdio.h>
+#include <math.h>
+
+int gcd(int a, int b) {
+    if (b == 0) return a;
+    return gcd(b, a % b);
+}
+
+int main() {
+    int p, q, n, z, d = 0, e, i, msg;
+    double c;
+    long long decrypted, j;
+
+    printf("Enter the number to be encrypted and decrypted\n");
+    scanf("%d", &msg);
+
+    printf("Enter 1st prime number p\n");
+    scanf("%d", &p);
+
+    printf("Enter 2nd prime number q\n");
+    scanf("%d", &q);
+
+    n = p * q;
+    z = (p - 1) * (q - 1);
+
+    printf("the value of z = %d\n", z);
+
+    for (e = 2; e < z; e++) {
+        if (gcd(e, z) == 1) break;
+    }
+
+    printf("the value of e = %d\n", e);
+
+    for (i = 0; i <= 9; i++) {
+        int x = 1 + (i * z);
+        if (x % e == 0) {
+            d = x / e;
+            break;
+        }
+    }
+
+    printf("the value of d = %d\n", d);
+
+    c = fmod(pow(msg, e), n);
+    printf("Encrypted message is :-\n");
+    printf("%f\n", c);
+
+    decrypted = 1;
+    for (j = 0; j < d; j++)
+        decrypted = (long long)((decrypted * (long long)c) % n);
+
+    printf("Derypted message is :-\n");
+    printf("%lld\n", decrypted);
+
+    return 0;
+}
+
+
+Enter the number to be encrypted and decrypted
+3
+Enter 1st prime number p
+1
+Enter 2nd prime number q
+5
+the value of z = 0
+the value of e = 2
+the value of d = 0
+Encrypted message is :-
+4.000000
+Derypted message is :-
+1
+
+
+---------------------------------------------------------------------------------------------------------------------------------
+
+#include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+#include <stdlib.h>
+
+#define LEFTROTATE(x, c) (((x) << (c)) | ((x) >> (32 - (c))))
+
+void md5(const uint8_t *msg, size_t len, uint8_t *digest) {
+    uint32_t h0 = 0x67452301;
+    uint32_t h1 = 0xefcdab89;
+    uint32_t h2 = 0x98badcfe;
+    uint32_t h3 = 0x10325476;
+
+    static const uint32_t r[] = {
+        7,12,17,22, 7,12,17,22, 7,12,17,22, 7,12,17,22,
+        5,9,14,20, 5,9,14,20, 5,9,14,20, 5,9,14,20,
+        4,11,16,23, 4,11,16,23, 4,11,16,23, 4,11,16,23,
+        6,10,15,21, 6,10,15,21, 6,10,15,21, 6,10,15,21
+    };
+
+    static const uint32_t k[] = {
+        0xd76aa478,0xe8c7b756,0x242070db,0xc1bdceee,0xf57c0faf,0x4787c62a,0xa8304613,0xfd469501,
+        0x698098d8,0x8b44f7af,0xffff5bb1,0x895cd7be,0x6b901122,0xfd987193,0xa679438e,0x49b40821,
+        0xf61e2562,0xc040b340,0x265e5a51,0xe9b6c7aa,0xd62f105d,0x02441453,0xd8a1e681,0xe7d3fbc8,
+        0x21e1cde6,0xc33707d6,0xf4d50d87,0x455a14ed,0xa9e3e905,0xfcefa3f8,0x676f02d9,0x8d2a4c8a,
+        0xfffa3942,0x8771f681,0x6d9d6122,0xfde5380c,0xa4beea44,0x4bdecfa9,0xf6bb4b60,0xbebfbc70,
+        0x289b7ec6,0xeaa127fa,0xd4ef3085,0x04881d05,0xd9d4d039,0xe6db99e5,0x1fa27cf8,0xc4ac5665,
+        0xf4292244,0x432aff97,0xab9423a7,0xfc93a039,0x655b59c3,0x8f0ccc92,0xffeff47d,0x85845dd1,
+        0x6fa87e4f,0xfe2ce6e0,0xa3014314,0x4e0811a1,0xf7537e82,0xbd3af235,0x2ad7d2bb,0xeb86d391
+    };
+
+    size_t new_len = len + 1;
+    while (new_len % 64 != 56) new_len++;
+
+    uint8_t *buffer = calloc(new_len + 8, 1);
+    memcpy(buffer, msg, len);
+    buffer[len] = 0x80;
+
+    uint64_t bits_len = len * 8;
+    memcpy(buffer + new_len, &bits_len, 8);
+
+    for (size_t offset = 0; offset < new_len; offset += 64) {
+        uint32_t w[16];
+        for (int i = 0; i < 16; i++) {
+            w[i] = (uint32_t)buffer[offset + i*4] |
+                   ((uint32_t)buffer[offset + i*4+1] << 8) |
+                   ((uint32_t)buffer[offset + i*4+2] << 16) |
+                   ((uint32_t)buffer[offset + i*4+3] << 24);
+        }
+
+        uint32_t a = h0, b = h1, c = h2, d = h3;
+
+        for (int i = 0; i < 64; i++) {
+            uint32_t f, g;
+            if (i < 16) {
+                f = (b & c) | (~b & d);
+                g = i;
+            } else if (i < 32) {
+                f = (d & b) | (~d & c);
+                g = (5*i + 1) % 16;
+            } else if (i < 48) {
+                f = b ^ c ^ d;
+                g = (3*i + 5) % 16;
+            } else {
+                f = c ^ (b | ~d);
+                g = (7*i) % 16;
+            }
+
+            uint32_t tmp = d;
+            d = c;
+            c = b;
+            b += LEFTROTATE(a + f + k[i] + w[g], r[i]);
+            a = tmp;
+        }
+
+        h0 += a; h1 += b; h2 += c; h3 += d;
+    }
+
+    memcpy(digest, &h0, 4);
+    memcpy(digest + 4, &h1, 4);
+    memcpy(digest + 8, &h2, 4);
+    memcpy(digest + 12, &h3, 4);
+
+    free(buffer);
+}
+
+int main() {
+    const char *inputs[] = {"", "abc", "abcdefghijklmnopqrstuvwxyz"};
+    uint8_t out[16];
+
+    for (int i = 0; i < 3; i++) {
+        md5((const uint8_t*)inputs[i], strlen(inputs[i]), out);
+
+        printf("MD5(\"%s\") = ", inputs[i]);
+        for (int j = 0; j < 16; j++)
+            printf("%02X", out[j]);
+        printf("\n");
+    }
+}
+
+output:
+
+
+MD5("") = D41D8CD98F00B204E9800998ECF8427E
+MD5("abc") = 900150983CD24FB0D6963F7D28E17F72
+MD5("abcdefghijklmnopqrstuvwxyz") = C3FCD3D76192E4007DFB496CCA67E13B
+
+----------------------------------------------------------------------------------------------------------------------------
+
+digital
+
+#include <stdio.h>
+#include <string.h>
+#include <openssl/rsa.h>
+#include <openssl/pem.h>
+#include <openssl/evp.h>
+#include <openssl/md5.h>
+#include <openssl/bio.h>
+#include <openssl/buffer.h>
+
+char* base64_encode(const unsigned char* buffer, size_t length) {
+    BIO *bio, *b64;
+    BUF_MEM *bufferPtr;
+    b64 = BIO_new(BIO_f_base64());
+    bio = BIO_new(BIO_s_mem());
+    bio = BIO_push(b64, bio);
+    BIO_set_flags(bio, BIO_FLAGS_BASE64_NO_NL);
+    BIO_write(bio, buffer, length);
+    BIO_flush(bio);
+    BIO_get_mem_ptr(bio, &bufferPtr);
+    char* b64text = (char*)malloc(bufferPtr->length + 1);
+    memcpy(b64text, bufferPtr->data, bufferPtr->length);
+    b64text[bufferPtr->length] = 0;
+    BIO_free_all(bio);
+    return b64text;
+}
+
+int main() {
+    EVP_PKEY *pkey;
+    EVP_MD_CTX *ctx;
+    RSA *rsa;
+    unsigned char signature[256];
+    size_t sig_len;
+    char *encoded;
+    char data[] = "Sample Text";
+
+    pkey = EVP_PKEY_new();
+    rsa = RSA_generate_key(1024, 65537, NULL, NULL);
+    EVP_PKEY_assign_RSA(pkey, rsa);
+
+    ctx = EVP_MD_CTX_new();
+    EVP_SignInit(ctx, EVP_md5());
+    EVP_SignUpdate(ctx, data, strlen(data));
+    EVP_SignFinal(ctx, signature, (unsigned int*)&sig_len, pkey);
+
+    encoded = base64_encode(signature, sig_len);
+
+    printf("Signature:\n%s\n", encoded);
+
+    EVP_VerifyInit(ctx, EVP_md5());
+    EVP_VerifyUpdate(ctx, data, strlen(data));
+    int verify = EVP_VerifyFinal(ctx, signature, sig_len, pkey);
+
+    printf("%s\n", verify == 1 ? "true" : "false");
+
+    free(encoded);
+    EVP_MD_CTX_free(ctx);
+    EVP_PKEY_free(pkey);
+
+    return 0;
+}
+
+
+
+#include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+
+// fast modular exponentiation (supports up to 64-bit modulus)
+uint64_t modexp(uint64_t a, uint64_t e, uint64_t m){
+    unsigned __int128 res = 1;
+    unsigned __int128 base = a % m;
+    while(e){
+        if(e & 1) res = (res * base) % m;
+        base = (base * base) % m;
+        e >>= 1;
+    }
+    return (uint64_t)res;
+}
+
+// extended gcd -> returns gcd and computes x,y such that ax+by=g
+uint64_t egcd(uint64_t a, uint64_t b, int64_t *x, int64_t *y){
+    if(b==0){ *x = 1; *y = 0; return a; }
+    int64_t x1,y1;
+    uint64_t g = egcd(b, a % b, &x1, &y1);
+    *x = y1;
+    *y = x1 - (a / b) * y1;
+    return g;
+}
+
+// modular inverse of a mod m (assumes inverse exists)
+uint64_t modinv(uint64_t a, uint64_t m){
+    int64_t x,y;
+    uint64_t g = egcd(a, m, &x, &y);
+    if(g != 1) return 0; // no inverse
+    int64_t res = x % (int64_t)m;
+    if(res < 0) res += m;
+    return (uint64_t)res;
+}
+
+// very small/fast educational hash (not cryptographic)
+uint64_t simple_hash(const char *s, uint64_t mod){
+    uint64_t h = 0;
+    while(*s){
+        h = (h * 131 + (unsigned char)(*s++)) % mod;
+    }
+    return h;
+}
+
+int main(){
+    // Small primes (for demo only). n fits in 64-bit.
+    const uint64_t p = 10007, q = 10009;
+    uint64_t n = p * q;                  // modulus
+    uint64_t phi = (p-1) * (q-1);        // phi(n)
+    uint64_t e = 65537;                  // public exponent (common choice)
+    uint64_t d = modinv(e, phi);         // private exponent
+
+    if(d == 0){
+        printf("Failed to compute modular inverse; pick different primes.\n");
+        return 1;
+    }
+
+    char message[1024];
+    printf("Enter message (Information Security subject):\n");
+    if(!fgets(message, sizeof message, stdin)) return 0;
+    // remove newline
+    size_t L = strlen(message);
+    if(L && message[L-1] == '\n') message[L-1] = '\0';
+
+    uint64_t h = simple_hash(message, n);           // hash of message (mod n)
+    uint64_t signature = modexp(h, d, n);           // sign: h^d mod n
+    uint64_t verify = modexp(signature, e, n);      // verify: sig^e mod n
+
+    printf("\nPublic key (n, e):\n%llu\n%llu\n", (unsigned long long)n, (unsigned long long)e);
+    printf("Private key d (keep secret):\n%llu\n", (unsigned long long)d);
+    printf("\nMessage: %s\n", message);
+    printf("Hash (mod n): %llu\n", (unsigned long long)h);
+    printf("Signature (number): %llu\n", (unsigned long long)signature);
+
+    if(verify == h) printf("Verification: SUCCESS (sig^e mod n == hash)\n");
+    else printf("Verification: FAILURE\n");
+
+    return 0;
+}
+
+Enter message (Information Security subject):
+hello
+
+Public key (n, e):
+100160063
+65537
+Private key d (keep secret):
+35910881
+
+Message: hello
+Hash (mod n): 7617218
+Signature (number): 48693700
+Verification: SUCCESS (sig^e mod n == hash)
+
+
+
+
+
+
+
+
+#include <stdio.h>
+#include <string.h>
+#include <openssl/rsa.h>
+#include <openssl/pem.h>
+#include <openssl/evp.h>
+#include <openssl/md5.h>
+#include <openssl/bio.h>
+#include <openssl/buffer.h>
+
+char* base64_encode(const unsigned char* buffer, size_t length) {
+    BIO *bio, *b64;
+    BUF_MEM *bufferPtr;
+    b64 = BIO_new(BIO_f_base64());
+    bio = BIO_new(BIO_s_mem());
+    bio = BIO_push(b64, bio);
+    BIO_set_flags(bio, BIO_FLAGS_BASE64_NO_NL);
+    BIO_write(bio, buffer, length);
+    BIO_flush(bio);
+    BIO_get_mem_ptr(bio, &bufferPtr);
+    char* b64text = (char*)malloc(bufferPtr->length + 1);
+    memcpy(b64text, bufferPtr->data, bufferPtr->length);
+    b64text[bufferPtr->length] = 0;
+    BIO_free_all(bio);
+    return b64text;
+}
+
+int main() {
+    EVP_PKEY *pkey;
+    EVP_MD_CTX *ctx;
+    RSA *rsa;
+    unsigned char signature[256];
+    size_t sig_len;
+    char *encoded;
+    char data[] = "Sample Text";
+
+    pkey = EVP_PKEY_new();
+    rsa = RSA_generate_key(1024, 65537, NULL, NULL);
+    EVP_PKEY_assign_RSA(pkey, rsa);
+
+    ctx = EVP_MD_CTX_new();
+    EVP_SignInit(ctx, EVP_md5());
+    EVP_SignUpdate(ctx, data, strlen(data));
+    EVP_SignFinal(ctx, signature, (unsigned int*)&sig_len, pkey);
+
+    encoded = base64_encode(signature, sig_len);
+
+    printf("Signature:\n%s\n", encoded);
+
+    EVP_VerifyInit(ctx, EVP_md5());
+    EVP_VerifyUpdate(ctx, data, strlen(data));
+    int verify = EVP_VerifyFinal(ctx, signature, sig_len, pkey);
+
+    printf("%s\n", verify == 1 ? "true" : "false");
+
+    free(encoded);
+    EVP_MD_CTX_free(ctx);
+    EVP_PKEY_free(pkey);
+
+    return 0;
+}
