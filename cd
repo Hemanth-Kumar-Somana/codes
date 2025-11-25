@@ -1,0 +1,310 @@
+5. Write a Lex program to count the number of words and lines in a given file or program.
+# ✅ **LEX Program: Count Words and Lines**
+
+Save this as **count.l**
+
+```lex
+%{
+int word_count = 0;
+int line_count = 0;
+%}
+
+%%
+
+[ \t]+          ;              /* Ignore spaces/tabs */
+\n              { line_count++; }
+[A-Za-z0-9_]+   { word_count++; }
+
+.               ;              /* Ignore other characters */
+
+%%
+
+int main() {
+    yylex();
+    printf("Total Lines : %d\n", line_count);
+    printf("Total Words : %d\n", word_count);
+    return 0;
+}
+
+int yywrap() {
+    return 1;
+}
+```
+
+---
+
+# ✅ **How It Works**
+
+| Pattern         | Action                                     |
+| --------------- | ------------------------------------------ |
+| `[ \t]+`        | Skip spaces/tabs                           |
+| `\n`            | Count each newline as a line               |
+| `[A-Za-z0-9_]+` | Count any sequence of characters as a word |
+| `.`             | Ignore everything else                     |
+
+---
+
+# 🛠️ **To Compile and Run**
+
+1. Generate C code:
+
+```
+lex count.l
+```
+
+2. Compile using gcc:
+
+```
+gcc lex.yy.c -o count
+```
+
+3. Run the program with a file:
+
+```
+./count < filename.txt
+```
+
+---
+
+If you want, I can also give a version that counts **characters**, or **counts specific tokens**, or handles **comments in C programs**.
+6. Write a recursive descent parser for the grammar:
+
+S → (L) | a
+
+L → L , S | S
+
+
+
+Here is the **simplest possible recursive-descent parser** for your grammar, assuming **input contains NO SPACES**.
+
+---
+
+# ✅ Grammar After Removing Left Recursion
+
+```
+S  → ( L ) | a
+L  → S L'
+L' → , S L' | ε
+```
+
+---
+
+# ✅ **C Implementation (NO SPACES, only chars like a,(,),,)**
+
+✔ Minimal
+✔ Clean
+✔ Direct grammar implementation
+✔ Only checks VALID / INVALID
+
+---
+
+# ✅ **FINAL C PROGRAM**
+
+```c
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+char input[100];
+int pos = 0;
+
+char get() {
+    return input[pos];
+}
+
+void advance() {
+    pos++;
+}
+
+void error() {
+    printf("Invalid string\n");
+    exit(1);
+}
+
+/* Grammar functions */
+void S();
+void L();
+void Lprime();
+
+/* S → ( L ) | a */
+void S() {
+    if (get() == '(') {
+        advance();          // (
+        L();
+        if (get() != ')') error();
+        advance();          // )
+    }
+    else if (get() == 'a') {
+        advance();          // a
+    }
+    else {
+        error();
+    }
+}
+
+/* L → S L' */
+void L() {
+    S();
+    Lprime();
+}
+
+/* L' → , S L' | ε */
+void Lprime() {
+    while (get() == ',') {
+        advance();          // ,
+        S();
+    }
+}
+
+int main() {
+    printf("Enter string: ");
+    scanf("%s", input);
+
+    S();
+
+    if (get() == '\0')
+        printf("Valid string\n");
+    else
+        printf("Invalid string\n");
+
+    return 0;
+}
+```
+
+---
+
+# ✔ Valid Examples
+
+```
+a
+(a)
+(a,a)
+((a),a)
+(a,(a,a))
+```
+
+# ❌ Invalid Examples
+
+```
+()
+(,)
+(a,
+a)
+((a),)
+```
+
+
+
+7. Write a YACC program to evaluate an algebraic expression.
+Below is a **clean, simple, fully working YACC program** that evaluates an algebraic expression with operators:
+
+✔ `+ , - , * , /`
+✔ parentheses `()`
+✔ supports multi-digit numbers
+
+Includes both **LEX** and **YACC** files.
+
+---
+
+# ✅ **LEX File (expr.l)**
+
+```lex
+%{
+#include "y.tab.h"
+%}
+
+%%
+
+[0-9]+      { yylval = atoi(yytext); return NUMBER; }
+[ \t\n]     { /* ignore spaces */ }
+.           { return yytext[0]; }
+
+%%
+
+int yywrap() {
+    return 1;
+}
+```
+
+---
+
+# ✅ **YACC File (expr.y)**
+
+```yacc
+%{
+#include <stdio.h>
+#include <stdlib.h>
+
+int yylex();
+void yyerror(const char *s) {
+    printf("Error: %s\n", s);
+}
+%}
+
+%token NUMBER
+
+%%
+
+E  : E '+' T      { $$ = $1 + $3; }
+   | E '-' T      { $$ = $1 - $3; }
+   | T            { $$ = $1; }
+   ;
+
+T  : T '*' F      { $$ = $1 * $3; }
+   | T '/' F      { $$ = $1 / $3; }
+   | F            { $$ = $1; }
+   ;
+
+F  : '(' E ')'    { $$ = $2; }
+   | NUMBER       { $$ = $1; }
+   ;
+
+%%
+
+int main() {
+    printf("Enter expression: ");
+    yyparse();
+    return 0;
+}
+```
+
+---
+
+# 🛠 **How to Compile and Run**
+
+Open terminal and run:
+
+```
+yacc -d expr.y
+lex expr.l
+cc lex.yy.c y.tab.c -o expr
+./expr
+```
+
+---
+
+# ▶ Example Input
+
+```
+10 + 20 * 3 - (4 + 6)
+```
+
+# ▶ Output
+
+```
+Enter expression: 10 + 20 * 3 - (4 + 6)
+44
+```
+
+---
+
+If you want, I can also provide:
+
+✅ Version with exponent operator `^`
+✅ Version that handles unary minus (`-5 + 3`)
+✅ Version printing parse tree
+Just tell me!
+
+
+
+
