@@ -1,5 +1,67 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdio.h>
+
+int gcd(int a, int b) {
+    if (b == 0) return a;
+    return gcd(b, a % b);
+}
+
+long long modexp(long long base, long long exp, long long mod) {
+    long long result = 1;
+    while (exp > 0) {
+        if (exp % 2 == 1)
+            result = (result * base) % mod;
+        base = (base * base) % mod;
+        exp /= 2;
+    }
+    return result;
+}
+
+int main() {
+    int p, q, msg, i;
+    long long n, z, e, d = 0;
+
+    printf("Enter the number to be encrypted and decrypted:\n");
+    scanf("%d", &msg);
+
+    printf("Enter 1st prime number p:\n");
+    scanf("%d", &p);
+
+    printf("Enter 2nd prime number q:\n");
+    scanf("%d", &q);
+
+    n = (long long)p * q;
+    z = (long long)(p - 1) * (q - 1);
+
+    printf("The value of n = %lld\n", n);
+    printf("The value of z = %lld\n", z);
+
+    for (e = 2; e < z; e++) {
+        if (gcd(e, z) == 1)
+            break;
+    }
+
+    printf("The value of e = %lld\n", e);
+
+    for (i = 1; i <= 10; i++) {
+        long long x = 1 + i * z;
+        if (x % e == 0) {
+            d = x / e;
+            break;
+        }
+    }
+
+    printf("The value of d = %lld\n", d);
+
+    long long cipher = modexp(msg, e, n);
+    printf("\nEncrypted message = %lld\n", cipher);
+
+    long long decrypted = modexp(cipher, d, n);
+    printf("Decrypted message = %lld\n", decrypted);
+
+    return 0;
+}
 
 int main() {
     char text[100];
