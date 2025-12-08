@@ -75,32 +75,6 @@ L → L , S | S
 
 
 
-Here is the **simplest possible recursive-descent parser** for your grammar, assuming **input contains NO SPACES**.
-
----
-
-# ✅ Grammar After Removing Left Recursion
-
-```
-S  → ( L ) | a
-L  → S L'
-L' → , S L' | ε
-```
-
----
-
-# ✅ **C Implementation (NO SPACES, only chars like a,(,),,)**
-
-✔ Minimal
-✔ Clean
-✔ Direct grammar implementation
-✔ Only checks VALID / INVALID
-
----
-
-# ✅ **FINAL C PROGRAM**
-
-```c
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -121,37 +95,33 @@ void error() {
     exit(1);
 }
 
-/* Grammar functions */
 void S();
 void L();
 void Lprime();
 
-/* S → ( L ) | a */
 void S() {
     if (get() == '(') {
-        advance();          // (
+        advance();
         L();
         if (get() != ')') error();
-        advance();          // )
+        advance();
     }
     else if (get() == 'a') {
-        advance();          // a
+        advance();
     }
     else {
         error();
     }
 }
 
-/* L → S L' */
 void L() {
     S();
     Lprime();
 }
 
-/* L' → , S L' | ε */
 void Lprime() {
     while (get() == ',') {
-        advance();          // ,
+        advance();
         S();
     }
 }
@@ -296,14 +266,110 @@ Enter expression: 10 + 20 * 3 - (4 + 6)
 44
 ```
 
----
+-------------------------------------------------------------------------------------------------------
+#include <stdio.h>
+#include <string.h>
 
-If you want, I can also provide:
+int main() {
+    char input[100];
+    int state = 0;  // q0
 
-✅ Version with exponent operator `^`
-✅ Version that handles unary minus (`-5 + 3`)
-✅ Version printing parse tree
-Just tell me!
+    printf("Enter a binary string: ");
+    scanf("%s", input);
+
+    for (int i = 0; i < strlen(input); i++) {
+        char c = input[i];
+
+        switch (state) {
+
+            case 0: // q0
+                if (c == '0')
+                    state = 1;  // go to q1
+                else if (c == '1')
+                    state = 3;  // go to q3
+                else {
+                    printf("Invalid input.\n");
+                    return 0;
+                }
+                break;
+
+            case 1: // q1: last char = 0
+                if (c == '0')
+                    state = 2;  // q2 (00)
+                else if (c == '1')
+                    state = 3;  // q3
+                else {
+                    printf("Invalid input.\n");
+                    return 0;
+                }
+                break;
+
+            case 2: // q2: last two = 00 (reject state)
+                if (c == '0')
+                    state = 2;  // stays in reject state
+                else if (c == '1')
+                    state = 3;  // exit reject state
+                else {
+                    printf("Invalid input.\n");
+                    return 0;
+                }
+                break;
+
+            case 3: // q3: last char = 1
+                if (c == '0')
+                    state = 1;  // q1
+                else if (c == '1')
+                    state = 3;  // stay q3
+                else {
+                    printf("Invalid input.\n");
+                    return 0;
+                }
+                break;
+        }
+    }
+
+    // FINAL CHECK
+    if (state == 2)
+        printf("Rejected: String ends with 00.\n");
+    else
+        printf("Accepted: String does NOT end with 00.\n");
+
+    return 0;
+}
+
+---------------------------------------------------------------------------------------------------------------------------------
+#include <stdio.h>
+#include <string.h>
+
+int main() {
+    char input[100];
+    int state = 0;  // q0 = 0 (accept), q1 = 1 (reject)
+
+    printf("Enter a binary string: ");
+    scanf("%s", input);
+
+    // DFA Processing
+    for (int i = 0; i < strlen(input); i++) {
+        if (input[i] == '0') {
+            state = 0;   // Move to q0
+        } 
+        else if (input[i] == '1') {
+            state = 1;   // Move to q1
+        } 
+        else {
+            printf("Invalid input (only 0 and 1 allowed)\n");
+            return 0;
+        }
+    }
+
+    // Final State Check
+    if (state == 0)
+        printf("Accepted: Even binary number.\n");
+    else
+        printf("Rejected: Odd binary number.\n");
+
+    return 0;
+}
 
 
 
